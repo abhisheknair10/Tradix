@@ -1,3 +1,6 @@
+// COMPILE AND RUN: clang++ main.cpp -o main; ./main
+// compile to target: clang++ main.cpp -o ../TradixApp/main
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
@@ -7,6 +10,8 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <pthread.h>
 
 #include "color.cpp"
 
@@ -24,14 +29,50 @@ using namespace std;
 
 // ==================== STOCK MARKET GLOBAL VARIABLES ====================
 
+string TOKEN = "cgmv0upr01qhveustqb0cgmv0upr01qhveustqbg";
+
 string TICKER = " SPY ";
+string PRICE = " 0.00 ";
 
 // list of available tickers
 string TICKERS_AVAIL[] = {
-    "AAPL",
-    "TSLA",
-    "SPY"
+    "AAPL", "TSLA", "SPY", "MSFT", "AMZN", "META", "GME", "BB", "AMD", 
+    "NVDA", "GOOGL", "NFLX", "UBER", "PLTR"
 };
+
+void get_data_stock() {
+    FILE* file = fopen("request.txt", "w");
+    if (!file) {
+        cout << "ERROR: Failed to open file" << endl;
+    }
+    else{
+        string inter_ticker = TICKER.substr(1, TICKER.length() - 2);
+        fprintf(file, "%s", inter_ticker.c_str());
+        fclose(file);
+    }
+
+    // read data from stockdata.txt
+    FILE* file2 = fopen("stockdata.txt", "r");
+    if (!file2) {
+        cout << "ERROR: Failed to open file" << endl;
+    }
+    else{
+        char buffer[128];
+        string result = "";
+        while (!feof(file2)) {
+            if (fgets(buffer, 128, file2) != NULL) {
+                result += buffer;
+            }
+        }
+        fclose(file2);
+
+        // only data available in first line is TICKER: PRICE
+        int start = result.find(":") + 1;
+        int end = result.find("\n", start);
+        PRICE = result.substr(start, end - start);
+    }
+}
+
 
 // ==================== STOCK MARKET GLOBAL VARIABLES ====================
 
@@ -100,7 +141,7 @@ void check_input() {
 
     // if enter button is pressed then print the command
     if (input == '\n') {
-        if (USER_CMD == "exit\n") {
+        if (USER_CMD == "exit\n" || USER_CMD == "quit\n") {
             reset_termios();
             exit(0);
         }
@@ -129,6 +170,8 @@ int main() {
     while (true) {
         system("clear");
         get_terminal_size();
+
+        get_data_stock();
         
         // check for keyboard input
         check_input();
@@ -151,9 +194,7 @@ int main() {
 
         LINESPACE;
 
-        // print the price of the stock
-        string price = " 420.69 ";
-        cout << COLOR_BLACK_GREEN(" Price: ") << " " << COLOR_BLACK_CYAN(price) << endl;
+        cout << COLOR_BLACK_GREEN(" Price: ") << " " << COLOR_BLACK_CYAN(PRICE) << endl;
 
         // delay of 50ms
         usleep(50000);
