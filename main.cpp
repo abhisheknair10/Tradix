@@ -8,11 +8,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 
-// Define Colors
-#define COLOR_BLACK_RED(text) "\033[41;30m" + text + "\033[0m"
-#define COLOR_BLACK_GREEN(text) "\033[42;30m" + text + "\033[0m"
-#define COLOR_BLACK_YELLOW(text) "\033[43;30m" + text + "\033[0m"
-#define COLOR_BLACK_PURPLE(text) "\033[45;30m" + text + "\033[0m"
+#include "color.cpp"
 
 using namespace std;
 
@@ -78,37 +74,25 @@ int main() {
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
-    string PRINT_VAL = "";
-
     while (true) {
         system("clear");
         get_terminal_size();
+        
+        // Check for keyboard input
+        check_input(USER_CMD);
 
-        PRINT_VAL = "Tradix Finance Terminal";
-        cout << COLOR_BLACK_PURPLE(PRINT_VAL);
+        // ====================== Print Header ======================
+        // Print Tradix Finance Terminal
+        cout << COLOR_BLACK_PURPLE("Tradix Finance Terminal");
 
-        // White Space
+        // Print date and time
         int space = COLS - 22 - get_time().length();
         string space_str = "";
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
         cout << space_str << COLOR_BLACK_YELLOW(get_time()) << endl;
-
-        // Read input non-blocking
-        char input;
-        if (read(STDIN_FILENO, &input, 1) > 0) {
-            USER_CMD += input;
-        }
-
-        // if enter button is pressed then print the command
-        if (input == '\n') {
-            if (USER_CMD == "exit\n") {
-                break;
-            }
-
-            USER_CMD = "";
-        }
+        // ====================== Print Header ======================
 
         // Delay of 50ms
         usleep(50000);
