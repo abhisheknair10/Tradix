@@ -10,10 +10,11 @@
 #include <termios.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <pthread.h>
+#include <fstream>
 
 #include "color.cpp"
+
+using namespace std;
 
 // =========================== GLOBAL VARIABLE ===========================
 
@@ -25,14 +26,28 @@ string USER_CMD = "";
 
 #define LINESPACE cout << endl;
 
-using namespace std;
-
 // ==================== STOCK MARKET GLOBAL VARIABLES ====================
 
 string TOKEN = "cgmv0upr01qhveustqb0cgmv0upr01qhveustqbg";
 
-string TICKER = " SPY ";
-string PRICE = " 0.00 ";
+// available data points
+string MARKET_STATUS = "STOCK MARKETS CLOSED";
+string TICKER = "SPY";
+
+string PREV_OPEN = "0.00";
+string PREV_HIGH = "0.00";
+string PREV_LOW = "0.00";
+string PREV_CLOSE = "0.00";
+
+string TODAY_OPEN = "0.00";
+string TODAY_HIGH = "0.00";
+string TODAY_LOW = "0.00";
+string TODAY_CLOSE = "0.00";
+string CURR_PRICE = "0.00";
+string VOLUME = "0.00";
+string MKT_CAP = "0.00";
+string PE_RATIO = "0.00";
+string DIV_YIELD = "0.00%";
 
 // list of available tickers
 string TICKERS_AVAIL[] = {
@@ -41,38 +56,12 @@ string TICKERS_AVAIL[] = {
 };
 
 void get_data_stock() {
-    FILE* file = fopen("request.txt", "w");
-    if (!file) {
-        cout << "ERROR: Failed to open file" << endl;
-    }
-    else{
-        string inter_ticker = TICKER.substr(1, TICKER.length() - 2);
-        fprintf(file, "%s", inter_ticker.c_str());
-        fclose(file);
-    }
-
-    // read data from stockdata.txt
-    FILE* file2 = fopen("stockdata.txt", "r");
-    if (!file2) {
-        cout << "ERROR: Failed to open file" << endl;
-    }
-    else{
-        char buffer[128];
-        string result = "";
-        while (!feof(file2)) {
-            if (fgets(buffer, 128, file2) != NULL) {
-                result += buffer;
-            }
-        }
-        fclose(file2);
-
-        // only data available in first line is TICKER: PRICE
-        int start = result.find(":") + 1;
-        int end = result.find("\n", start);
-        PRICE = result.substr(start, end - start);
-    }
+    // write ticker to request.json
+    ofstream request_json;
+    request_json.open("request.json");
+    request_json << "{\n\t\"ticker\": \"" + TICKER + "\"\n}";
+    request_json.close();
 }
-
 
 // ==================== STOCK MARKET GLOBAL VARIABLES ====================
 
@@ -113,7 +102,7 @@ string get_time() {
     date += to_string(ltm->tm_mday) + "/";
     date += to_string(1900 + ltm->tm_year);
 
-    return " " + date + " " + time + " ";
+    return date + " " + time;
 }
 
 // get terminal size
@@ -151,7 +140,7 @@ void check_input() {
         }
         for (int i = 0; i < sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0]); i++) {
             if (USER_CMD == TICKERS_AVAIL[i] + "\n") {
-                TICKER = " " + TICKERS_AVAIL[i] + " ";
+                TICKER = TICKERS_AVAIL[i];
             }
         }
 
@@ -167,6 +156,11 @@ int main() {
     int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
     fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
 
+    int space;
+    string space_str;
+
+    int adjustspace = 9;
+
     while (true) {
         system("clear");
         get_terminal_size();
@@ -177,26 +171,130 @@ int main() {
         check_input();
 
         // print Tradix Finance Terminal
-        cout << COLOR_BLACK_PURPLE(" Tradix Finance Terminal ");
+        cout << COLOR_BLACK_PURPLE("Tradix Finance Terminal");
 
-        // print date and time
-        int space = COLS - 25 - get_time().length();
-        string space_str = "";
+        // display market status
+        space = (COLS / 2) - (MARKET_STATUS.length() / 2) - 23;
+        space_str = "";
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_BLACK_YELLOW(get_time()) << endl;
+        if (MARKET_STATUS == "STOCK MARKETS CLOSED") {
+            cout << space_str << COLOR_BLACK_RED(MARKET_STATUS);
+        } else {
+            cout << space_str << COLOR_BLACK_GREEN(MARKET_STATUS);
+        }
 
+        // display time and date
+        space = (COLS / 2) - ((MARKET_STATUS.length() + 2) / 2) - get_time().length() - 5;
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_GREEN_BLUE(get_time());
+
+        cout << endl;
         LINESPACE;
-        
-        // print the ticker of the stock
-        cout << COLOR_BLACK_GREEN(" Ticker: ") << " " << COLOR_BLACK_CYAN(TICKER) << endl;
 
+        // Display Ticker
+        cout << "    " << COLOR_BLACK_WHITE("TICKER:") << " " << COLOR_BLACK_WHITE(TICKER);
+        // display previous open
+        space = adjustspace - TICKER.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_WHITE("PREV OPEN:") << " " << COLOR_BLACK_WHITE(PREV_OPEN);
+        // display previous high
+        space = adjustspace - PREV_OPEN.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_WHITE("PREV HIGH:") << " " << COLOR_BLACK_WHITE(PREV_HIGH);
+        // display previous low
+        space = adjustspace - PREV_HIGH.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_WHITE("PREV LOW:") << " " << COLOR_BLACK_WHITE(PREV_LOW);
+        // display previous close
+        space = adjustspace - PREV_LOW.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_WHITE("PREV CLOSE:") << " " << COLOR_BLACK_WHITE(PREV_CLOSE);
+
+        cout << endl;
         LINESPACE;
 
-        cout << COLOR_BLACK_GREEN(" Price: ") << " " << COLOR_BLACK_CYAN(PRICE) << endl;
+        // display current price
+        cout << "    " << COLOR_BLACK_YELLOW("PRICE: ") << " " << COLOR_BLACK_WHITE(CURR_PRICE);
+        // display current open
+        space = adjustspace - CURR_PRICE.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_YELLOW("CURR OPEN:") << " " << COLOR_BLACK_WHITE(TODAY_OPEN);
+        // display current high
+        space = adjustspace - CURR_PRICE.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_YELLOW("CURR HIGH:") << " " << COLOR_BLACK_WHITE(TODAY_HIGH);
+        // display current low
+        space = adjustspace - TODAY_HIGH.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_YELLOW("CURR LOW:") << " " << COLOR_BLACK_WHITE(TODAY_LOW);
+        // display current close
+        space = adjustspace - TODAY_LOW.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_YELLOW("CURR CLOSE:") << " " << COLOR_BLACK_WHITE(TODAY_CLOSE);
 
-        // delay of 50ms
+        cout << endl;
+        LINESPACE;
+
+        // display mktd cap
+        cout << "    " << COLOR_BLACK_YELLOW("MT CAP:") << " " << COLOR_BLACK_WHITE(MKT_CAP);
+
+        // display volume
+        space = adjustspace - MKT_CAP.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_YELLOW(" VOLUME:  ") << " " << COLOR_BLACK_WHITE(VOLUME);
+
+        // display pe ratio
+        space = adjustspace - VOLUME.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_YELLOW("PE RATIO: ") << " " << COLOR_BLACK_WHITE(PE_RATIO);
+
+        // display div yield
+        space = adjustspace - PE_RATIO.length();
+        space_str = "";
+        for (int i = 0; i < space; i++) {
+            space_str += " ";
+        }
+        cout << space_str << COLOR_BLACK_YELLOW("DIV YLD: ") << " " << COLOR_BLACK_WHITE(DIV_YIELD);
+
+        cout << endl;
+        LINESPACE;
+
+        // sleep for 50ms
         usleep(50000);
         flush(cout);
     }
