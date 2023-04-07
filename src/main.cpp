@@ -11,10 +11,7 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <fstream>
-
 #include "color.cpp"
-
-using namespace std;
 
 // =========================== GLOBAL VARIABLE ===========================
 
@@ -24,7 +21,7 @@ string USER_CMD = "";
 
 // =========================== GLOBAL VARIABLE ===========================
 
-#define LINESPACE cout << endl;
+#define LINESPACE printf("\n");
 
 // ==================== STOCK MARKET GLOBAL VARIABLES ====================
 
@@ -43,7 +40,7 @@ string TODAY_OPEN = "0.00";
 string TODAY_HIGH = "0.00";
 string TODAY_LOW = "0.00";
 string TODAY_CLOSE = "0.00";
-string CURR_PRICE = "0.00";
+string TDY_PRICE = "0.00";
 string VOLUME = "0.00";
 string MKT_CAP = "0.00";
 string PE_RATIO = "0.00";
@@ -54,6 +51,32 @@ string TICKERS_AVAIL[] = {
     "AAPL", "TSLA", "SPY", "MSFT", "AMZN", "META", "GME", "BB", "AMD", 
     "NVDA", "GOOGL", "NFLX", "UBER", "PLTR"
 };
+
+string TICKERS_AVAIL_LA[] ={
+    "AAPL - Apple Inc.", "TSLA - Tesla Inc.", "SPY - SPDR S&P 500 ETF Trust",
+    "MSFT - Microsoft Corporation", "AMZN - Amazon.com Inc.", "META - META Platforms, Inc.",
+    "GME - GameStop Corp.", "BB - BlackBerry Limited", "AMD - Advanced Micro Devices Inc.",
+    "NVDA - NVIDIA Corporation", "GOOGL - Alphabet Inc.", "NFLX - Netflix Inc.",
+    "UBER - Uber Technologies Inc.", "PLTR - Palantir Technologies Inc."
+};
+
+/*
+    "SQ", "PYPL", "TWTR", "SNAP", "ROKU", "F", "GM", "NOK", "BBBY", "WISH",
+    "AMC", "CLOV", "WKHS", "RBLX", "BAC", "WFC", "JPM", "GS", "C", "MS",
+    "T", "VZ", "TMUS", "CMCSA", "NFLX", "DIS", "KO", "PEP", "MCD", "SBUX",
+    "NKE", "WMT", "TGT", "COST", "HD", "LOW", "TJX", "DG", "ROST", "M",
+    "JNJ", "PFE", "MRNA", "BNTX", "AZN", "GILD", "ABT", "LLY", "ABBV", "BMY",
+    "CVS", "UNH", "MDT", "TMO", "DHR", "AMGN", "PFE", "JNJ", "MRK", "BMY",
+    "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH", "TMO", "DHR", "AMGN", "MDT",
+    "PFE", "JNJ", "MRK", "BMY", "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH",
+    "TMO", "DHR", "AMGN", "MDT", "PFE", "JNJ", "MRK", "BMY", "ABBV", "LLY",
+    "ABT", "GILD", "CVS", "UNH", "TMO", "DHR", "AMGN", "MDT", "PFE", "JNJ",
+    "MRK", "BMY", "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH", "TMO", "DHR",
+    "AMGN", "MDT", "PFE", "JNJ", "MRK", "BMY", "ABBV", "LLY", "ABT", "GILD",
+    "CVS", "UNH", "TMO", "DHR", "AMGN", "MDT", "PFE", "JNJ", "MRK", "BMY",
+    "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH", "TMO", "DHR", "AMGN", "MDT",
+    "PFE", "JNJ", "MRK", "BMY", "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH"
+*/
 
 void get_data_stock() {
     // write ticker to request.json
@@ -114,7 +137,7 @@ void get_terminal_size() {
 }
 
 // function to check for keyboard input
-void check_input() {
+int check_input() {
     char input;
     if (read(STDIN_FILENO, &input, 1) > 0) {
         USER_CMD += input;
@@ -141,13 +164,45 @@ void check_input() {
         for (int i = 0; i < sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0]); i++) {
             if (USER_CMD == TICKERS_AVAIL[i] + "\n") {
                 TICKER = TICKERS_AVAIL[i];
+                USER_CMD = "";
+                return 55739;
             }
         }
+
+        if (USER_CMD == "LA\n") {
+            USER_CMD = "";
+            return 100;
+        }
+
+        if (USER_CMD == "\n") {
+            USER_CMD = "";
+            return 11232;
+        }
+
         USER_CMD = "";
     }
+
+    // if arrow key is pressed
+    if (input == 27) {
+        read(STDIN_FILENO, &input, 1);
+        if (input == 91) {
+            read(STDIN_FILENO, &input, 1);
+            switch (input) {
+                case 65: // up arrow
+                    USER_CMD = "";
+                    return 1001;
+                case 66: // down arrow
+                    USER_CMD = "";
+                    return 1002;
+            }
+        }
+    }
+
+    return 0;
 }
 
 int main() {
+
     init_termios();
 
     // set input to non-blocking mode
@@ -159,6 +214,11 @@ int main() {
 
     int adjustspace = 9;
 
+    string terminal_state = "list_stock";
+    int check_input_state = 0;
+
+    int active_cursor_ticker = 0;
+    
     while (true) {
         system("clear");
         get_terminal_size();
@@ -166,10 +226,14 @@ int main() {
         get_data_stock();
         
         // check for keyboard input
-        check_input();
+        check_input_state = check_input();
+        
+        if (check_input_state == 100) {
+            terminal_state = "list_stock";
+        }
 
         // print Tradix Finance Terminal
-        cout << COLOR_BLACK_PURPLE("Tradix Finance Terminal");
+        printf("%s", COLOR_BLACK_PURPLE("Tradix Finance Terminal").c_str());
 
         // display market status
         space = (COLS / 2) - (MARKET_STATUS.length() / 2) - 23;
@@ -178,9 +242,9 @@ int main() {
             space_str += " ";
         }
         if (MARKET_STATUS == "STOCK MARKETS CLOSED") {
-            cout << space_str << COLOR_BLACK_RED(MARKET_STATUS);
+            printf("%s%s", space_str.c_str(), COLOR_BLACK_RED(MARKET_STATUS).c_str());
         } else {
-            cout << space_str << COLOR_BLACK_GREEN(MARKET_STATUS);
+            printf("%s%s", space_str.c_str(), COLOR_BLACK_GREEN(MARKET_STATUS).c_str());
         }
 
         // display time and date
@@ -189,112 +253,201 @@ int main() {
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_GREEN_BLUE(get_time());
+        printf("%s%s", space_str.c_str(), COLOR_GREEN_BLUE(get_time()).c_str());
 
-        cout << endl;
+        printf("\n");
         LINESPACE;
 
-        // Display Ticker
-        cout << "    " << COLOR_BLACK_YELLOW("TICKER:") << " " << COLOR_GREEN_BLUE(TICKER);
-        // display previous open
-        space = adjustspace - TICKER.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_BLACK_WHITE("PREV OPEN:") << " " << COLOR_BLACK_WHITE(PREV_OPEN);
-        // display previous high
-        space = adjustspace - PREV_OPEN.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_BLACK_WHITE("PREV HIGH:") << " " << COLOR_BLACK_WHITE(PREV_HIGH);
-        // display previous low
-        space = adjustspace - PREV_HIGH.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_BLACK_WHITE("PREV LOW:") << " " << COLOR_BLACK_WHITE(PREV_LOW);
-        // display previous close
-        space = adjustspace - PREV_LOW.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_BLACK_WHITE("PREV CLOSE:") << " " << COLOR_BLACK_WHITE(PREV_CLOSE);
+        if (terminal_state == "narrow_stock"){
+            // Display Ticker
+            printf("    %s %s", COLOR_BLACK_YELLOW("TICKER:").c_str(), COLOR_GREEN_BLUE(TICKER).c_str());
+            // display previous open
+            space = adjustspace - TICKER.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            
+            // display previous open
+            space = adjustspace - TICKER.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_WHITE("PREV OPEN:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(PREV_OPEN).c_str());
 
-        cout << endl;
-        LINESPACE;
+            // display previous low
+            space = adjustspace - PREV_OPEN.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_WHITE("PREV LOW:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(PREV_LOW).c_str());
 
-        // display current price
-        cout << "    " << COLOR_BLACK_YELLOW("PRICE: ") << " " << COLOR_BLACK_WHITE(CURR_PRICE);
-        // display current open
-        space = adjustspace - CURR_PRICE.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
+            // display previous high
+            space = adjustspace - PREV_LOW.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_WHITE("PREV HIGH:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(PREV_HIGH).c_str());
+
+            // display previous close
+            space = adjustspace - PREV_HIGH.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_WHITE("PREV CLOSE:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(PREV_CLOSE).c_str());
+
+            printf("\n");
+            LINESPACE;
+
+            // display current price
+            printf("    %s %s", COLOR_BLACK_YELLOW("PRICE: ").c_str(), COLOR_BLACK_WHITE(TDY_PRICE).c_str());
+
+            // display current open
+            space = adjustspace - TDY_PRICE.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("CURR OPEN:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(TODAY_OPEN).c_str());
+
+            // display current low
+            space = adjustspace - TDY_PRICE.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("CURR LOW:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(TODAY_LOW).c_str());
+
+            // display current high
+            space = adjustspace - TODAY_LOW.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("CURR HIGH:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(TODAY_HIGH).c_str());
+
+            // display current close
+            space = adjustspace - TODAY_HIGH.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("CURR CLOSE:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(TODAY_CLOSE).c_str());
+
+            printf("\n");
+            LINESPACE;
+
+            // display volume
+            printf("    %s %s", COLOR_BLACK_YELLOW("VOLUME:").c_str(), COLOR_BLACK_WHITE(VOLUME).c_str());
+
+            // display mkt cap
+            space = adjustspace - VOLUME.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW(" MKT CAP: ").c_str());
+            printf("%s", COLOR_BLACK_WHITE(MKT_CAP).c_str());
+
+            // display PE ratio
+            space = adjustspace - MKT_CAP.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("PE RATIO:").c_str());
+            printf("%s", COLOR_BLACK_WHITE(PE_RATIO).c_str());
+
+            // display DIV_YLD
+            space = adjustspace - PE_RATIO.length();
+            space_str = "";
+            for (int i = 0; i < space; i++) {
+                space_str += " ";
+            }
+            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW(" DIV YLD: ").c_str());
+            printf("%s", COLOR_BLACK_WHITE(DIV_YIELD).c_str());
+
+            printf("\n");
+            LINESPACE;
+
         }
-        cout << space_str << COLOR_WHITE_BLACK("CURR OPEN:") << " " << COLOR_BLACK_WHITE(TODAY_OPEN);
-        // display current high
-        space = adjustspace - CURR_PRICE.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
+        else if (terminal_state == "list_stock") {
+
+            if (check_input_state == 55739){
+                terminal_state = "narrow_stock";
+            }
+
+            if (check_input_state == 11232) {
+                terminal_state = "narrow_stock";
+                TICKER = TICKERS_AVAIL[active_cursor_ticker];
+                USER_CMD = "";
+            }
+
+            // if up arrow is clicked, change active_cursor_ticker to the previous ticker
+            if (check_input_state == 1001) {
+                if (active_cursor_ticker == 0) {
+                    active_cursor_ticker = sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0]) - 1;
+                } else {
+                    active_cursor_ticker--;
+                }
+            }
+
+            // if down arrow is clicked, change active_cursor_ticker to the next ticker
+            if (check_input_state == 1002) {
+                if (active_cursor_ticker == sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0]) - 1) {
+                    active_cursor_ticker = 0;
+                } else {
+                    active_cursor_ticker++;
+                }
+            }
+
+            // print out the list of tickers along with whitespace after so that
+            for (int i = 0; i < sizeof(TICKERS_AVAIL_LA) / sizeof(TICKERS_AVAIL_LA[0]); i++) {
+                // assume the max length of a ticker is 6
+                space = 32 - TICKERS_AVAIL_LA[i].length();
+                space_str = "";
+                for (int j = 0; j < space; j++) {
+                    space_str += " ";
+                }
+                if (i == active_cursor_ticker) {
+                    printf(
+                        "    %s%s", 
+                        COLOR_BLACK_YELLOW(TICKERS_AVAIL_LA[i]).c_str(), 
+                        COLOR_BLACK_YELLOW(space_str).c_str()
+                    );
+                    printf("\n");
+                    
+                } else {
+                    printf(
+                        "    %s%s", 
+                        COLOR_BLACK_WHITE(TICKERS_AVAIL_LA[i]).c_str(), 
+                        COLOR_BLACK_WHITE(space_str).c_str()
+                    );
+                    printf("\n");
+                }
+            }
+
+            printf("\n");
+            LINESPACE;
         }
-        cout << space_str << COLOR_WHITE_BLACK("CURR HIGH:") << " " << COLOR_BLACK_WHITE(TODAY_HIGH);
-        // display current low
-        space = adjustspace - TODAY_HIGH.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_WHITE_BLACK("CURR LOW:") << " " << COLOR_BLACK_WHITE(TODAY_LOW);
-        // display current close
-        space = adjustspace - TODAY_LOW.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_WHITE_BLACK("CURR CLOSE:") << " " << COLOR_BLACK_WHITE(TODAY_CLOSE);
 
-        cout << endl;
-        LINESPACE;
-
-        // display mktd cap
-        cout << "    " << COLOR_BLACK_YELLOW("MT CAP:") << " " << COLOR_BLACK_WHITE(MKT_CAP);
-
-        // display volume
-        space = adjustspace - MKT_CAP.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_WHITE_BLACK(" VOLUME:  ") << " " << COLOR_BLACK_WHITE(VOLUME);
-
-        // display pe ratio
-        space = adjustspace - VOLUME.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_BLACK_PURPLE("PE RATIO: ") << " " << COLOR_BLACK_WHITE(PE_RATIO);
-
-        // display div yield
-        space = adjustspace - PE_RATIO.length();
-        space_str = "";
-        for (int i = 0; i < space; i++) {
-            space_str += " ";
-        }
-        cout << space_str << COLOR_BLACK_PURPLE("DIV YLD: ") << " " << COLOR_BLACK_WHITE(DIV_YIELD);
-
-        cout << endl;
-        LINESPACE;
-
-        // sleep for 50ms
-        usleep(50000);
-        flush(cout);
+        // sleep for 30ms
+        usleep(30000);
+        // flush everything
+        fflush(stdout);
+        fflush(stdin);
     }
 
     reset_termios();
