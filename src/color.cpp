@@ -30,3 +30,7 @@ string COLOR_BLACK_WHITE(string text) {
 string COLOR_GREEN_BLUE(string text) { 
     return "\033[44;32m " + text + " \033[0m"; 
 }
+
+string COLOR_WHITE_BLACK(string text) { 
+    return "\033[30;47m " + text + " \033[0m"; 
+}

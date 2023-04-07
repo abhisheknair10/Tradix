@@ -1,8 +1,17 @@
 {
-    "Market_Status": "Closed",
+    "Market_Status": "STOCK MARKET CLOSED",
     "Ticker": "SPY",
-    "Price": "126",
-    "Market_Cap": "753B",
-    "P/E": "11.89",
-    "Dividend": "1.0"
+    "PREV_OPEN": "0.00",
+    "PREV_HIGH": "0.00",
+    "PREV_LOW": "0.00",
+    "PREV_CLOSE": "0.00",
+    "TODAY_OPEN": "0.00",
+    "TODAY_HIGH": "0.00",
+    "TODAY_LOW": "0.00",
+    "TODAY_CLOSE": "0.00",
+    "CURR_PRICE": "0.00",
+    "VOLUME": "0.00",
+    "MKT_CAP": "0.00",
+    "PE_RATIO": "0.00",
+    "DIV_YIELD": "0.00%"
 }

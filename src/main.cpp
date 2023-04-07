@@ -143,8 +143,6 @@ void check_input() {
                 TICKER = TICKERS_AVAIL[i];
             }
         }
-
-        cout << "Command: " << USER_CMD << endl;
         USER_CMD = "";
     }
 }
@@ -197,7 +195,7 @@ int main() {
         LINESPACE;
 
         // Display Ticker
-        cout << "    " << COLOR_BLACK_WHITE("TICKER:") << " " << COLOR_BLACK_WHITE(TICKER);
+        cout << "    " << COLOR_BLACK_YELLOW("TICKER:") << " " << COLOR_GREEN_BLUE(TICKER);
         // display previous open
         space = adjustspace - TICKER.length();
         space_str = "";
@@ -238,28 +236,28 @@ int main() {
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_BLACK_YELLOW("CURR OPEN:") << " " << COLOR_BLACK_WHITE(TODAY_OPEN);
+        cout << space_str << COLOR_WHITE_BLACK("CURR OPEN:") << " " << COLOR_BLACK_WHITE(TODAY_OPEN);
         // display current high
         space = adjustspace - CURR_PRICE.length();
         space_str = "";
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_BLACK_YELLOW("CURR HIGH:") << " " << COLOR_BLACK_WHITE(TODAY_HIGH);
+        cout << space_str << COLOR_WHITE_BLACK("CURR HIGH:") << " " << COLOR_BLACK_WHITE(TODAY_HIGH);
         // display current low
         space = adjustspace - TODAY_HIGH.length();
         space_str = "";
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_BLACK_YELLOW("CURR LOW:") << " " << COLOR_BLACK_WHITE(TODAY_LOW);
+        cout << space_str << COLOR_WHITE_BLACK("CURR LOW:") << " " << COLOR_BLACK_WHITE(TODAY_LOW);
         // display current close
         space = adjustspace - TODAY_LOW.length();
         space_str = "";
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_BLACK_YELLOW("CURR CLOSE:") << " " << COLOR_BLACK_WHITE(TODAY_CLOSE);
+        cout << space_str << COLOR_WHITE_BLACK("CURR CLOSE:") << " " << COLOR_BLACK_WHITE(TODAY_CLOSE);
 
         cout << endl;
         LINESPACE;
@@ -273,7 +271,7 @@ int main() {
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_BLACK_YELLOW(" VOLUME:  ") << " " << COLOR_BLACK_WHITE(VOLUME);
+        cout << space_str << COLOR_WHITE_BLACK(" VOLUME:  ") << " " << COLOR_BLACK_WHITE(VOLUME);
 
         // display pe ratio
         space = adjustspace - VOLUME.length();
@@ -281,7 +279,7 @@ int main() {
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_BLACK_YELLOW("PE RATIO: ") << " " << COLOR_BLACK_WHITE(PE_RATIO);
+        cout << space_str << COLOR_BLACK_PURPLE("PE RATIO: ") << " " << COLOR_BLACK_WHITE(PE_RATIO);
 
         // display div yield
         space = adjustspace - PE_RATIO.length();
@@ -289,7 +287,7 @@ int main() {
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        cout << space_str << COLOR_BLACK_YELLOW("DIV YLD: ") << " " << COLOR_BLACK_WHITE(DIV_YIELD);
+        cout << space_str << COLOR_BLACK_PURPLE("DIV YLD: ") << " " << COLOR_BLACK_WHITE(DIV_YIELD);
 
         cout << endl;
         LINESPACE;

@@ -1,8 +1,17 @@
 {
     "Market_Status": "STOCK MARKET CLOSED",
-    "Ticker": "SPY",
-    "Price": "126",
-    "Market_Cap": "753B",
-    "P/E": "11.89",
-    "Dividend": "1.0"
+    "Ticker": "TSLA",
+    "PREV_OPEN": "119",
+    "PREV_HIGH": "784",
+    "PREV_LOW": "200",
+    "PREV_CLOSE": "440",
+    "TODAY_OPEN": "98",
+    "TODAY_HIGH": "468",
+    "TODAY_LOW": "2",
+    "TODAY_CLOSE": "399",
+    "CURR_PRICE": "398",
+    "VOLUME": "63",
+    "MKT_CAP": "987",
+    "PE_RATIO": "531",
+    "DIV_YIELD": "699%"
 }
