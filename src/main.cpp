@@ -12,6 +12,7 @@
 #include <sys/ioctl.h>
 #include <fstream>
 #include "color.cpp"
+#include <curses.h>
 
 // =========================== GLOBAL VARIABLE ===========================
 
@@ -138,13 +139,13 @@ void get_terminal_size() {
 
 // function to check for keyboard input
 int check_input() {
-    char input;
-    if (read(STDIN_FILENO, &input, 1) > 0) {
+    int input = getch(); // get keyboard input using curses library
+    if (input != ERR) {
         USER_CMD += input;
     }
 
     // if the backspace is pressed then delete the last character
-    if (input == 127) {
+    if (input == KEY_BACKSPACE || input == 127) {
         if (USER_CMD.length() > 0) {
             USER_CMD.pop_back();
             USER_CMD.pop_back();
@@ -152,9 +153,10 @@ int check_input() {
     }
 
     // if enter button is pressed then print the command
-    if (input == '\n') {
+    if (input == KEY_ENTER || input == '\n') {
         if (USER_CMD == "exit\n" || USER_CMD == "quit\n") {
             reset_termios();
+            endwin();
             exit(0);
         }
 
@@ -183,18 +185,20 @@ int check_input() {
     }
 
     // if arrow key is pressed
-    if (input == 27) {
-        read(STDIN_FILENO, &input, 1);
-        if (input == 91) {
-            read(STDIN_FILENO, &input, 1);
-            switch (input) {
-                case 65: // up arrow
-                    USER_CMD = "";
-                    return 1001;
-                case 66: // down arrow
-                    USER_CMD = "";
-                    return 1002;
+    if (input == KEY_UP || input == KEY_DOWN || input == 27) {
+        if (input == 27) {
+            input = getch(); // get the next character to identify which arrow key was pressed
+            if (input == '[') {
+                input = getch(); // get the next character after the '[' character
             }
+        }
+        switch (input) {
+            case KEY_UP:
+                USER_CMD = "";
+                return 1001;
+            case KEY_DOWN:
+                USER_CMD = "";
+                return 1002;
         }
     }
 
@@ -203,24 +207,31 @@ int check_input() {
 
 int main() {
 
+    initscr();
+
     init_termios();
 
-    // set input to non-blocking mode
-    int flags = fcntl(STDIN_FILENO, F_GETFL, 0);
-    fcntl(STDIN_FILENO, F_SETFL, flags | O_NONBLOCK);
+    cbreak(); // Line buffering disabled, pass on everything to me
+    noecho(); // Don't echo while we do getch
+    nodelay(stdscr, true); // Set input to non-blocking mode
+    keypad(stdscr, true); // Enable interpretation of arrow keys
 
     int space;
     string space_str;
 
     int adjustspace = 9;
 
-    string terminal_state = "list_stock";
+    string terminal_state = "narrow_stock";
     int check_input_state = 0;
 
     int active_cursor_ticker = 0;
     
     while (true) {
-        system("clear");
+        // clear the screen
+        clear();
+        refresh();
+
+        // get terminal size
         get_terminal_size();
 
         get_data_stock();
@@ -443,14 +454,18 @@ int main() {
             LINESPACE;
         }
 
-        // sleep for 30ms
-        usleep(30000);
+        refresh();
+
+        // sleep for 50ms
+        usleep(50000);
         // flush everything
         fflush(stdout);
         fflush(stdin);
     }
 
     reset_termios();
+
+    endwin();
 
     return 0;
 }
