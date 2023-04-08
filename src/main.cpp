@@ -542,14 +542,12 @@ int main() {
                     COLOR_WHITE_BLACK("    ");
                     COLOR_BLACK_YELLOW(TICKERS_AVAIL_LA[i]);
                     COLOR_BLACK_YELLOW(space_str.c_str());
-
                     NEWLINE;
                     
                 } else {
                     COLOR_WHITE_BLACK("    ");
                     COLOR_WHITE_BLACK(TICKERS_AVAIL_LA[i]);
                     COLOR_WHITE_BLACK(space_str.c_str());
-
                     NEWLINE;
                 }
             }
