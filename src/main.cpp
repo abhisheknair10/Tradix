@@ -1,5 +1,5 @@
 // COMPILE AND RUN: clang++ main.cpp -o main; ./main
-// compile to target: clang++ main.cpp -o ../TradixApp/main
+// compile to target: clang++ main.cpp -lncurses -o ../TradixApp/main
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,8 +11,9 @@
 #include <fcntl.h>
 #include <sys/ioctl.h>
 #include <fstream>
-#include "color.cpp"
 #include <curses.h>
+
+using namespace std;
 
 // =========================== GLOBAL VARIABLE ===========================
 
@@ -22,7 +23,7 @@ string USER_CMD = "";
 
 // =========================== GLOBAL VARIABLE ===========================
 
-#define LINESPACE printf("\n");
+#define NEWLINE addstr("\n");
 
 // ==================== STOCK MARKET GLOBAL VARIABLES ====================
 
@@ -50,34 +51,40 @@ string DIV_YIELD = "0.00%";
 // list of available tickers
 string TICKERS_AVAIL[] = {
     "AAPL", "TSLA", "SPY", "MSFT", "AMZN", "META", "GME", "BB", "AMD", 
-    "NVDA", "GOOGL", "NFLX", "UBER", "PLTR"
+    "NVDA", "GOOGL", "NFLX", "UBER", "PLTR", "SQ", "PYPL", "TWTR", "SNAP",
+    "DIS", "BABA", "BIDU", "NIO", "XPEV", "LI", "F", "GM", "T", "NOK",
 };
 
 string TICKERS_AVAIL_LA[] ={
-    "AAPL - Apple Inc.", "TSLA - Tesla Inc.", "SPY - SPDR S&P 500 ETF Trust",
-    "MSFT - Microsoft Corporation", "AMZN - Amazon.com Inc.", "META - META Platforms, Inc.",
-    "GME - GameStop Corp.", "BB - BlackBerry Limited", "AMD - Advanced Micro Devices Inc.",
-    "NVDA - NVIDIA Corporation", "GOOGL - Alphabet Inc.", "NFLX - Netflix Inc.",
-    "UBER - Uber Technologies Inc.", "PLTR - Palantir Technologies Inc."
+    "    |  AAPL  |   Apple Inc.                      |  Technology              |  ",
+    "    |  TSLA  |   Tesla Inc.                      |  Consumer Cyclical       |  ",
+    "    |  SPY   |   SPDR S&P 500 ETF Trust          |  Index Fund              |  ",
+    "    |  MSFT  |   Microsoft Corporation           |  Technology              |  ",
+    "    |  AMZN  |   Amazon.com, Inc.                |  Consumer Cyclical       |  ",
+    "    |  META  |   Roundhill Ball Metaverse ETF    |  Index Fund              |  ",
+    "    |  GME   |   GameStop Corp.                  |  Consumer Cyclical       |  ",
+    "    |  BB    |   BlackBerry Limited              |  Technology              |  ",
+    "    |  AMD   |   Advanced Micro Devices, Inc.    |  Technology              |  ",
+    "    |  NVDA  |   NVIDIA Corporation              |  Technology              |  ",
+    "    |  GOOGL |   Alphabet Inc.                   |  Communication Services  |  ",
+    "    |  NFLX  |   Netflix, Inc.                   |  Communication Services  |  ",
+    "    |  UBER  |   Uber Technologies, Inc.         |  Technology              |  ",
+    "    |  PLTR  |   Palantir Technologies Inc.      |  Technology              |  ",
+    "    |  SQ    |   Square, Inc.                    |  Technology              |  ",
+    "    |  PYPL  |   PayPal Holdings, Inc.           |  Technology              |  ",
+    "    |  TWTR  |   Twitter, Inc.                   |  Communication Services  |  ",
+    "    |  SNAP  |   Snap Inc.                       |  Communication Services  |  ",
+    "    |  DIS   |   The Walt Disney Company         |  Communication Services  |  ",
+    "    |  BABA  |   Alibaba Group Holding Limited   |  Consumer Cyclical       |  ",
+    "    |  BIDU  |   Baidu, Inc.                     |  Communication Services  |  ",
+    "    |  NIO   |   NIO Inc.                        |  Consumer Cyclical       |  ",
+    "    |  XPEV  |   XPeng Inc.                      |  Consumer Cyclical       |  ",
+    "    |  LI    |   Li Auto Inc.                    |  Consumer Cyclical       |  ",
+    "    |  F     |   Ford Motor Company              |  Consumer Cyclical       |  ",
+    "    |  GM    |   General Motors Company          |  Consumer Cyclical       |  ",
+    "    |  T     |   AT&T Inc.                       |  Communication Services  |  ",
+    "    |  NOK   |   Nokia Corporation               |  Technology              |  ",
 };
-
-/*
-    "SQ", "PYPL", "TWTR", "SNAP", "ROKU", "F", "GM", "NOK", "BBBY", "WISH",
-    "AMC", "CLOV", "WKHS", "RBLX", "BAC", "WFC", "JPM", "GS", "C", "MS",
-    "T", "VZ", "TMUS", "CMCSA", "NFLX", "DIS", "KO", "PEP", "MCD", "SBUX",
-    "NKE", "WMT", "TGT", "COST", "HD", "LOW", "TJX", "DG", "ROST", "M",
-    "JNJ", "PFE", "MRNA", "BNTX", "AZN", "GILD", "ABT", "LLY", "ABBV", "BMY",
-    "CVS", "UNH", "MDT", "TMO", "DHR", "AMGN", "PFE", "JNJ", "MRK", "BMY",
-    "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH", "TMO", "DHR", "AMGN", "MDT",
-    "PFE", "JNJ", "MRK", "BMY", "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH",
-    "TMO", "DHR", "AMGN", "MDT", "PFE", "JNJ", "MRK", "BMY", "ABBV", "LLY",
-    "ABT", "GILD", "CVS", "UNH", "TMO", "DHR", "AMGN", "MDT", "PFE", "JNJ",
-    "MRK", "BMY", "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH", "TMO", "DHR",
-    "AMGN", "MDT", "PFE", "JNJ", "MRK", "BMY", "ABBV", "LLY", "ABT", "GILD",
-    "CVS", "UNH", "TMO", "DHR", "AMGN", "MDT", "PFE", "JNJ", "MRK", "BMY",
-    "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH", "TMO", "DHR", "AMGN", "MDT",
-    "PFE", "JNJ", "MRK", "BMY", "ABBV", "LLY", "ABT", "GILD", "CVS", "UNH"
-*/
 
 void get_data_stock() {
     // write ticker to request.json
@@ -88,6 +95,73 @@ void get_data_stock() {
 }
 
 // ==================== STOCK MARKET GLOBAL VARIABLES ====================
+
+// ======================= COLORED PRINT FUNCTION =======================
+
+void COLOR_BLACK_PURPLE(string text) {
+    init_pair(1, COLOR_BLACK, COLOR_MAGENTA);
+    attron(COLOR_PAIR(1));
+    addstr(" ");
+    addstr(text.c_str());
+    addstr(" ");
+    attroff(COLOR_PAIR(1));
+}
+
+void COLOR_BLACK_YELLOW(string text) {
+    init_pair(2, COLOR_BLACK, COLOR_YELLOW);
+    attron(COLOR_PAIR(2));
+    addstr(" ");
+    addstr(text.c_str());
+    addstr(" ");
+    attroff(COLOR_PAIR(2));
+}
+
+void COLOR_BLACK_GREEN(string text) {
+    init_pair(3, COLOR_BLACK, COLOR_GREEN);
+    attron(COLOR_PAIR(3));
+    addstr(" ");
+    addstr(text.c_str());
+    addstr(" ");
+    attroff(COLOR_PAIR(3));
+}
+
+void COLOR_BLACK_RED(string text) {
+    init_pair(4, COLOR_BLACK, COLOR_RED);
+    attron(COLOR_PAIR(4));
+    addstr(" ");
+    addstr(text.c_str());
+    addstr(" ");
+    attroff(COLOR_PAIR(4));
+}
+
+void COLOR_BLACK_CYAN(string text) {
+    init_pair(5, COLOR_BLACK, COLOR_CYAN);
+    attron(COLOR_PAIR(5));
+    addstr(" ");
+    addstr(text.c_str());
+    addstr(" ");
+    attroff(COLOR_PAIR(5));
+}
+
+void COLOR_WHITE_BLACK(string text) {
+    init_pair(6, 255, COLOR_BLACK);
+    attron(COLOR_PAIR(6));
+    addstr(" ");
+    addstr(text.c_str());
+    addstr(" ");
+    attroff(COLOR_PAIR(6));
+}
+
+void COLOR_GREEN_BLUE(string text) {
+    init_pair(7, COLOR_GREEN, COLOR_BLUE);
+    attron(COLOR_PAIR(7));
+    addstr(" ");
+    addstr(text.c_str());
+    addstr(" ");
+    attroff(COLOR_PAIR(7));
+}
+
+// ======================= COLORED PRINT FUNCTION =======================
 
 // save the original terminal settings
 void init_termios() {
@@ -215,6 +289,7 @@ int main() {
     noecho(); // Don't echo while we do getch
     nodelay(stdscr, true); // Set input to non-blocking mode
     keypad(stdscr, true); // Enable interpretation of arrow keys
+    start_color(); // Enable color
 
     int space;
     string space_str;
@@ -229,7 +304,6 @@ int main() {
     while (true) {
         // clear the screen
         clear();
-        refresh();
 
         // get terminal size
         get_terminal_size();
@@ -244,34 +318,40 @@ int main() {
         }
 
         // print Tradix Finance Terminal
-        printf("%s", COLOR_BLACK_PURPLE("Tradix Finance Terminal").c_str());
+        //printf("%s", COLOR_BLACK_PURPLE("Tradix Finance Terminal").c_str());
+        COLOR_BLACK_PURPLE("Tradix Finance Terminal");
 
         // display market status
-        space = (COLS / 2) - (MARKET_STATUS.length() / 2) - 23;
+        space = (COLS / 2) - ((MARKET_STATUS.length() + 2) / 2) - 25;
         space_str = "";
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
         if (MARKET_STATUS == "STOCK MARKETS CLOSED") {
-            printf("%s%s", space_str.c_str(), COLOR_BLACK_RED(MARKET_STATUS).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_RED(MARKET_STATUS);
         } else {
-            printf("%s%s", space_str.c_str(), COLOR_BLACK_GREEN(MARKET_STATUS).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_GREEN(MARKET_STATUS);
         }
 
         // display time and date
-        space = (COLS / 2) - ((MARKET_STATUS.length() + 2) / 2) - get_time().length() - 5;
+        space = (COLS / 2) - ((get_time().length() + 2) / 2) - 25;
         space_str = "";
         for (int i = 0; i < space; i++) {
             space_str += " ";
         }
-        printf("%s%s", space_str.c_str(), COLOR_GREEN_BLUE(get_time()).c_str());
+        COLOR_WHITE_BLACK(space_str.c_str());
+        COLOR_GREEN_BLUE(get_time());
 
-        printf("\n");
-        LINESPACE;
+        NEWLINE;
+        NEWLINE;
 
         if (terminal_state == "narrow_stock"){
             // Display Ticker
-            printf("    %s %s", COLOR_BLACK_YELLOW("TICKER:").c_str(), COLOR_GREEN_BLUE(TICKER).c_str());
+            COLOR_WHITE_BLACK("    ");
+            COLOR_BLACK_YELLOW("TICKER:");
+            COLOR_GREEN_BLUE(TICKER);
             // display previous open
             space = adjustspace - TICKER.length();
             space_str = "";
@@ -285,8 +365,10 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_WHITE("PREV OPEN:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(PREV_OPEN).c_str());
+            //printf("%s %s", space_str.c_str(), COLOR_WHITE_BLACK("PREV OPEN:").c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("PREV OPEN:");
+            COLOR_WHITE_BLACK(PREV_OPEN);
 
             // display previous low
             space = adjustspace - PREV_OPEN.length();
@@ -294,8 +376,9 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_WHITE("PREV LOW:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(PREV_LOW).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("PREV LOW:");
+            COLOR_WHITE_BLACK(PREV_LOW);
 
             // display previous high
             space = adjustspace - PREV_LOW.length();
@@ -303,8 +386,9 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_WHITE("PREV HIGH:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(PREV_HIGH).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("PREV HIGH:");
+            COLOR_WHITE_BLACK(PREV_HIGH);
 
             // display previous close
             space = adjustspace - PREV_HIGH.length();
@@ -312,14 +396,17 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_WHITE("PREV CLOSE:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(PREV_CLOSE).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("PREV CLOSE:");
+            COLOR_WHITE_BLACK(PREV_CLOSE);
 
-            printf("\n");
-            LINESPACE;
+            NEWLINE;
+            NEWLINE;
 
             // display current price
-            printf("    %s %s", COLOR_BLACK_YELLOW("PRICE: ").c_str(), COLOR_BLACK_WHITE(TDY_PRICE).c_str());
+            COLOR_WHITE_BLACK("    ");
+            COLOR_BLACK_YELLOW("PRICE: ");
+            COLOR_WHITE_BLACK(TDY_PRICE);
 
             // display current open
             space = adjustspace - TDY_PRICE.length();
@@ -327,8 +414,9 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("CURR OPEN:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(TODAY_OPEN).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("CURR OPEN:");
+            COLOR_WHITE_BLACK(TODAY_OPEN);
 
             // display current low
             space = adjustspace - TDY_PRICE.length();
@@ -336,8 +424,9 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("CURR LOW:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(TODAY_LOW).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("CURR LOW:");
+            COLOR_WHITE_BLACK(TODAY_LOW);
 
             // display current high
             space = adjustspace - TODAY_LOW.length();
@@ -345,8 +434,9 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("CURR HIGH:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(TODAY_HIGH).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("CURR HIGH:");
+            COLOR_WHITE_BLACK(TODAY_HIGH);
 
             // display current close
             space = adjustspace - TODAY_HIGH.length();
@@ -354,14 +444,17 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("CURR CLOSE:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(TODAY_CLOSE).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("CURR CLOSE:");
+            COLOR_WHITE_BLACK(TODAY_CLOSE);
 
-            printf("\n");
-            LINESPACE;
-
+            NEWLINE;
+            NEWLINE;
+            
             // display volume
-            printf("    %s %s", COLOR_BLACK_YELLOW("VOLUME:").c_str(), COLOR_BLACK_WHITE(VOLUME).c_str());
+            COLOR_WHITE_BLACK("    ");
+            COLOR_BLACK_YELLOW("VOLUME:");
+            COLOR_WHITE_BLACK(VOLUME);
 
             // display mkt cap
             space = adjustspace - VOLUME.length();
@@ -369,8 +462,9 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW(" MKT CAP: ").c_str());
-            printf("%s", COLOR_BLACK_WHITE(MKT_CAP).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW(" MKT CAP: ");
+            COLOR_WHITE_BLACK(MKT_CAP);
 
             // display PE ratio
             space = adjustspace - MKT_CAP.length();
@@ -378,8 +472,9 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW("PE RATIO:").c_str());
-            printf("%s", COLOR_BLACK_WHITE(PE_RATIO).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW("PE RATIO:");
+            COLOR_WHITE_BLACK(PE_RATIO);
 
             // display DIV_YLD
             space = adjustspace - PE_RATIO.length();
@@ -387,14 +482,25 @@ int main() {
             for (int i = 0; i < space; i++) {
                 space_str += " ";
             }
-            printf("%s %s", space_str.c_str(), COLOR_BLACK_YELLOW(" DIV YLD: ").c_str());
-            printf("%s", COLOR_BLACK_WHITE(DIV_YIELD).c_str());
+            COLOR_WHITE_BLACK(space_str.c_str());
+            COLOR_BLACK_YELLOW(" DIV YLD: ");
+            COLOR_WHITE_BLACK(DIV_YIELD);
 
-            printf("\n");
-            LINESPACE;
-
+            NEWLINE;
+            NEWLINE;
+            
         }
         else if (terminal_state == "list_stock") {
+
+            // if USER_CMD is there in the list of tickers, then set active_cursor_ticker to that
+            for (int i = 0; i < sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0]); i++) {
+                // capitalize USER_CMD
+                string USER_CMD_CAP = USER_CMD;
+                transform(USER_CMD_CAP.begin(), USER_CMD_CAP.end(), USER_CMD_CAP.begin(), ::toupper);
+                if (TICKERS_AVAIL[i] == USER_CMD_CAP) {
+                    active_cursor_ticker = i;
+                }
+            }
 
             if (check_input_state == 55739){
                 terminal_state = "narrow_stock";
@@ -427,32 +533,43 @@ int main() {
             // print out the list of tickers along with whitespace after so that
             for (int i = 0; i < sizeof(TICKERS_AVAIL_LA) / sizeof(TICKERS_AVAIL_LA[0]); i++) {
                 // assume the max length of a ticker is 6
-                space = 32 - TICKERS_AVAIL_LA[i].length();
+                space = 70 - TICKERS_AVAIL_LA[i].length();
                 space_str = "";
                 for (int j = 0; j < space; j++) {
                     space_str += " ";
                 }
                 if (i == active_cursor_ticker) {
-                    printf(
-                        "    %s%s", 
-                        COLOR_BLACK_YELLOW(TICKERS_AVAIL_LA[i]).c_str(), 
-                        COLOR_BLACK_YELLOW(space_str).c_str()
-                    );
-                    printf("\n");
+                    COLOR_WHITE_BLACK("    ");
+                    COLOR_BLACK_YELLOW(TICKERS_AVAIL_LA[i]);
+                    COLOR_BLACK_YELLOW(space_str.c_str());
+
+                    NEWLINE;
                     
                 } else {
-                    printf(
-                        "    %s%s", 
-                        COLOR_BLACK_WHITE(TICKERS_AVAIL_LA[i]).c_str(), 
-                        COLOR_BLACK_WHITE(space_str).c_str()
-                    );
-                    printf("\n");
+                    COLOR_WHITE_BLACK("    ");
+                    COLOR_WHITE_BLACK(TICKERS_AVAIL_LA[i]);
+                    COLOR_WHITE_BLACK(space_str.c_str());
+
+                    NEWLINE;
                 }
             }
 
-            printf("\n");
-            LINESPACE;
+            NEWLINE;
+            NEWLINE;
+            
         }
+
+        // move cursor to the bottom left
+        move(ROWS - 1, 0);
+        // print user command
+        init_pair(6, 255, COLOR_BLACK);
+        attron(COLOR_PAIR(6));
+        addstr(":");
+        // convert to uppercase
+        string USER_CMD_CAP = USER_CMD;
+        transform(USER_CMD_CAP.begin(), USER_CMD_CAP.end(), USER_CMD_CAP.begin(), ::toupper);
+        addstr(USER_CMD_CAP.c_str());
+        attroff(COLOR_PAIR(6));
 
         refresh();
 
