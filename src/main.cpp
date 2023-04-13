@@ -55,13 +55,14 @@ string TICKERS_AVAIL[] = {
     "DIS", "BABA", "BIDU", "NIO", "XPEV", "LI", "F", "GM", "T", "NOK",
 };
 
-string TICKERS_AVAIL_LA[] ={
+string TICKERS_AVAIL_LA[] = {
+    "    | TICKER |   COMPANY NAME                    |  SECTOR                  |  ",
     "    |  AAPL  |   Apple Inc.                      |  Technology              |  ",
     "    |  TSLA  |   Tesla Inc.                      |  Consumer Cyclical       |  ",
     "    |  SPY   |   SPDR S&P 500 ETF Trust          |  Index Fund              |  ",
     "    |  MSFT  |   Microsoft Corporation           |  Technology              |  ",
     "    |  AMZN  |   Amazon.com, Inc.                |  Consumer Cyclical       |  ",
-    "    |  META  |   Roundhill Ball Metaverse ETF    |  Index Fund              |  ",
+    "    |  META  |   Meta Platforms Inc.             |  Technology              |  ",
     "    |  GME   |   GameStop Corp.                  |  Consumer Cyclical       |  ",
     "    |  BB    |   BlackBerry Limited              |  Technology              |  ",
     "    |  AMD   |   Advanced Micro Devices, Inc.    |  Technology              |  ",
@@ -228,7 +229,8 @@ int check_input() {
 
     // if enter button is pressed then print the command
     if (input == KEY_ENTER || input == '\n') {
-        if (USER_CMD == "exit\n" || USER_CMD == "quit\n") {
+        if (USER_CMD == "exit\n" || USER_CMD == "quit\n"
+            || USER_CMD == "EXIT\n" || USER_CMD == "QUIT\n") {
             reset_termios();
             endwin();
             exit(0);
@@ -245,7 +247,7 @@ int check_input() {
             }
         }
 
-        if (USER_CMD == "LA\n") {
+        if (USER_CMD == "LS\n") {
             USER_CMD = "";
             return 100;
         }
@@ -296,10 +298,10 @@ int main() {
 
     int adjustspace = 9;
 
-    string terminal_state = "narrow_stock";
+    string terminal_state = "list_stock";
     int check_input_state = 0;
 
-    int active_cursor_ticker = 0;
+    int active_cursor_ticker = 1;
     
     while (true) {
         // clear the screen
@@ -367,7 +369,7 @@ int main() {
             }
             //printf("%s %s", space_str.c_str(), COLOR_WHITE_BLACK("PREV OPEN:").c_str());
             COLOR_WHITE_BLACK(space_str.c_str());
-            COLOR_BLACK_YELLOW("PREV OPEN:");
+            COLOR_WHITE_BLACK("PREV OPEN:");
             COLOR_WHITE_BLACK(PREV_OPEN);
 
             // display previous low
@@ -377,7 +379,7 @@ int main() {
                 space_str += " ";
             }
             COLOR_WHITE_BLACK(space_str.c_str());
-            COLOR_BLACK_YELLOW("PREV LOW:");
+            COLOR_WHITE_BLACK("PREV LOW:");
             COLOR_WHITE_BLACK(PREV_LOW);
 
             // display previous high
@@ -387,7 +389,7 @@ int main() {
                 space_str += " ";
             }
             COLOR_WHITE_BLACK(space_str.c_str());
-            COLOR_BLACK_YELLOW("PREV HIGH:");
+            COLOR_WHITE_BLACK("PREV HIGH:");
             COLOR_WHITE_BLACK(PREV_HIGH);
 
             // display previous close
@@ -397,7 +399,7 @@ int main() {
                 space_str += " ";
             }
             COLOR_WHITE_BLACK(space_str.c_str());
-            COLOR_BLACK_YELLOW("PREV CLOSE:");
+            COLOR_WHITE_BLACK("PREV CLOSE:");
             COLOR_WHITE_BLACK(PREV_CLOSE);
 
             NEWLINE;
@@ -473,7 +475,7 @@ int main() {
                 space_str += " ";
             }
             COLOR_WHITE_BLACK(space_str.c_str());
-            COLOR_BLACK_YELLOW("PE RATIO:");
+            COLOR_WHITE_BLACK("PE RATIO:");
             COLOR_WHITE_BLACK(PE_RATIO);
 
             // display DIV_YLD
@@ -483,7 +485,7 @@ int main() {
                 space_str += " ";
             }
             COLOR_WHITE_BLACK(space_str.c_str());
-            COLOR_BLACK_YELLOW(" DIV YLD: ");
+            COLOR_WHITE_BLACK(" DIV YLD: ");
             COLOR_WHITE_BLACK(DIV_YIELD);
 
             NEWLINE;
@@ -498,7 +500,7 @@ int main() {
                 string USER_CMD_CAP = USER_CMD;
                 transform(USER_CMD_CAP.begin(), USER_CMD_CAP.end(), USER_CMD_CAP.begin(), ::toupper);
                 if (TICKERS_AVAIL[i] == USER_CMD_CAP) {
-                    active_cursor_ticker = i;
+                    active_cursor_ticker = i + 1;
                 }
             }
 
@@ -508,14 +510,14 @@ int main() {
 
             if (check_input_state == 11232) {
                 terminal_state = "narrow_stock";
-                TICKER = TICKERS_AVAIL[active_cursor_ticker];
+                TICKER = TICKERS_AVAIL[active_cursor_ticker - 1];
                 USER_CMD = "";
             }
 
             // if up arrow is clicked, change active_cursor_ticker to the previous ticker
             if (check_input_state == 1001) {
-                if (active_cursor_ticker == 0) {
-                    active_cursor_ticker = sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0]) - 1;
+                if (active_cursor_ticker == 1) {
+                    active_cursor_ticker = sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0]);
                 } else {
                     active_cursor_ticker--;
                 }
@@ -523,8 +525,8 @@ int main() {
 
             // if down arrow is clicked, change active_cursor_ticker to the next ticker
             if (check_input_state == 1002) {
-                if (active_cursor_ticker == sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0]) - 1) {
-                    active_cursor_ticker = 0;
+                if (active_cursor_ticker == sizeof(TICKERS_AVAIL) / sizeof(TICKERS_AVAIL[0])) {
+                    active_cursor_ticker = 1;
                 } else {
                     active_cursor_ticker++;
                 }
@@ -532,23 +534,31 @@ int main() {
 
             // print out the list of tickers along with whitespace after so that
             for (int i = 0; i < sizeof(TICKERS_AVAIL_LA) / sizeof(TICKERS_AVAIL_LA[0]); i++) {
-                // assume the max length of a ticker is 6
                 space = 70 - TICKERS_AVAIL_LA[i].length();
                 space_str = "";
                 for (int j = 0; j < space; j++) {
                     space_str += " ";
                 }
-                if (i == active_cursor_ticker) {
+                if (i == 0) {
                     COLOR_WHITE_BLACK("    ");
-                    COLOR_BLACK_YELLOW(TICKERS_AVAIL_LA[i]);
-                    COLOR_BLACK_YELLOW(space_str.c_str());
+                    COLOR_GREEN_BLUE(TICKERS_AVAIL_LA[i]);
+                    COLOR_GREEN_BLUE(space_str.c_str());
                     NEWLINE;
+		    NEWLINE;
                     
                 } else {
-                    COLOR_WHITE_BLACK("    ");
-                    COLOR_WHITE_BLACK(TICKERS_AVAIL_LA[i]);
-                    COLOR_WHITE_BLACK(space_str.c_str());
-                    NEWLINE;
+                    if (i == active_cursor_ticker) {
+                        COLOR_WHITE_BLACK("    ");
+                        COLOR_BLACK_YELLOW(TICKERS_AVAIL_LA[i]);
+                        COLOR_BLACK_YELLOW(space_str.c_str());
+                        NEWLINE;
+                        
+                    } else {
+                        COLOR_WHITE_BLACK("    ");
+                        COLOR_WHITE_BLACK(TICKERS_AVAIL_LA[i]);
+                        COLOR_WHITE_BLACK(space_str.c_str());
+                        NEWLINE;
+                    }
                 }
             }
 
@@ -572,7 +582,7 @@ int main() {
         refresh();
 
         // sleep for 50ms
-        usleep(50000);
+        usleep(60000);
         // flush everything
         fflush(stdout);
         fflush(stdin);
