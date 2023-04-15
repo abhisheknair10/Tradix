@@ -582,7 +582,7 @@ int main() {
         refresh();
 
         // sleep for 50ms
-        usleep(60000);
+        usleep(50000);
         // flush everything
         fflush(stdout);
         fflush(stdin);
