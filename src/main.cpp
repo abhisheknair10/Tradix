@@ -85,6 +85,7 @@ string TICKERS_AVAIL_LA[] = {
     "    |  GM    |   General Motors Company          |  Consumer Cyclical       |  ",
     "    |  T     |   AT&T Inc.                       |  Communication Services  |  ",
     "    |  NOK   |   Nokia Corporation               |  Technology              |  ",
+    "    |  NIO   |   NIO Inc.                        |  Consumer Cyclical       |  "
 };
 
 void get_data_stock() {
@@ -228,7 +229,7 @@ int check_input() {
     }
 
     // if enter button is pressed then print the command
-    if (input == KEY_ENTER || input == '\n') {
+    else if (input == KEY_ENTER || input == '\n') {
         if (USER_CMD == "exit\n" || USER_CMD == "quit\n"
             || USER_CMD == "EXIT\n" || USER_CMD == "QUIT\n") {
             reset_termios();
@@ -572,17 +573,17 @@ int main() {
         // print user command
         init_pair(6, 255, COLOR_BLACK);
         attron(COLOR_PAIR(6));
-        addstr(":");
+        addstr("-> ");
         // convert to uppercase
-        string USER_CMD_CAP = USER_CMD;
-        transform(USER_CMD_CAP.begin(), USER_CMD_CAP.end(), USER_CMD_CAP.begin(), ::toupper);
-        addstr(USER_CMD_CAP.c_str());
+        string USER_CMD_OUT = USER_CMD;
+		transform(USER_CMD_OUT.begin(), USER_CMD_OUT.end(), USER_CMD_OUT.begin(), ::toupper);
+        addstr(USER_CMD_OUT.c_str());
         attroff(COLOR_PAIR(6));
 
         refresh();
 
         // sleep for 50ms
-        usleep(50000);
+        usleep(20000);
         // flush everything
         fflush(stdout);
         fflush(stdin);
